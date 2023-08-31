@@ -7,7 +7,7 @@ User = get_user_model()
 
 class Recipe(models.Model):
     tags = models.ForeignKey(
-        'Tags',
+        'Tag',
         on_delete=models.SET_DEFAULT,
         default=...,
         related_name='recipes',
@@ -20,17 +20,15 @@ class Recipe(models.Model):
         verbose_name='Автор'
     )
     ingridients = models.ManyToManyField(
-        'Ingridients',
+        'Ingridient',
         through='RecipeIngridients',                # Написать модель
         verbose_name='Ингридиенты'
     )
     is_favorited = models.BooleanField(
-        blank=True,
         default=False,
         verbose_name='В избранном'
     )
     is_in_shoping_cart = models.BooleanField(
-        blank=True,
         default=False,
         verbose_name='В корзине',
     )
@@ -67,10 +65,21 @@ class Tag(models.Model):
     )
 
 
-class Ingridients(models.Model):
+class Ingridient(models.Model):
     name = models.CharField(
         max_length=200,
         unique=True,
         verbose_name='Название'
     )
     measurement_unit = ...
+
+
+class RecipeIngridients(models.Model):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete = models.CASCADE
+    )
+    ingridient = models.ForeignKey(
+        Ingridient,
+        on_delete = models.CASCADE
+    )
