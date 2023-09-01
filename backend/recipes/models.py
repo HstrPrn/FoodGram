@@ -22,9 +22,9 @@ class Recipe(models.Model):
         related_name='recipe',
         verbose_name='Автор'
     )
-    ingridient = models.ManyToManyField(
-        'Ingridient',
-        through='RecipeIngridients',
+    ingredient = models.ManyToManyField(
+        'Ingredient',
+        through='RecipeIngredients',
         verbose_name='Ингридиенты',
         related_name='+'
     )
@@ -56,6 +56,7 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+        ordering = ('name',)
 
     def __str__(self) -> str:
         return self.name
@@ -68,7 +69,7 @@ class Tag(models.Model):
         verbose_name='Название'
     )
     color = models.CharField(
-        max_length=200,
+        max_length=200,        # 7
         verbose_name='Цвет'
     )
     slug = models.SlugField(
@@ -77,7 +78,9 @@ class Tag(models.Model):
     )
 
     class Meta:
-        pass
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+        ordering = ('name',)
 
     def __str__(self) -> str:
         return self.name
@@ -87,7 +90,7 @@ class Tag(models.Model):
         super(Tag, self).save(*args, **kwargs)
 
 
-class Ingridient(models.Model):
+class Ingredient(models.Model):
     name = models.CharField(
         max_length=200,
         verbose_name='Название',
@@ -99,24 +102,26 @@ class Ingridient(models.Model):
     )
 
     class Meta:
+        verbose_name = 'Ингридиент'
+        verbose_name_plural = 'Ингридиенты'
         ordering = ('name',)
 
     def __str__(self) -> str:
         return self.name
 
 
-class RecipeIngridients(models.Model):
+class RecipeIngredients(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт'
     )
-    ingridient = models.ForeignKey(
-        Ingridient,
+    ingrideent = models.ForeignKey(
+        Ingredient,
         on_delete=models.CASCADE,
-        verbose_name='Ингридиент'
+        verbose_name='Ингрeдиент'
     )
     ingredient_quantity = models.IntegerField(
         validators=(MinValueValidator(1),),
-        verbose_name='Колличество ингридиента'
+        verbose_name='Колличество ингредиента'
     )

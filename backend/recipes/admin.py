@@ -1,23 +1,23 @@
 from django.contrib import admin
 
-from .models import Recipe, Tag, Ingridient, RecipeIngridients
+from .models import Recipe, Tag, Ingredient, RecipeIngredients
 
 
-admin.site.register(RecipeIngridients)
+admin.site.register(RecipeIngredients)
 
 
-class IngridientInline(admin.TabularInline):
-    model = Recipe.ingridient.through
+class IngredientInline(admin.TabularInline):
+    model = Recipe.ingredient.through
 
 
-@admin.register(Ingridient)
-class IngridientAdmin(admin.ModelAdmin):
+@admin.register(Ingredient)
+class IngredientAdmin(admin.ModelAdmin):
     pass
 
 
 @admin.register(Recipe)
-class RevipeAdmin(admin.ModelAdmin):
-    inlines = (IngridientInline,)
+class RecipeAdmin(admin.ModelAdmin):
+    inlines = (IngredientInline,)
 
 
 @admin.register(Tag)
