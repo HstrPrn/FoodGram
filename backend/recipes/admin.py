@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Recipe, Tag, Ingredient, RecipeIngredient, Favorite
+from .models import (
+    Recipe,
+    Tag,
+    Ingredient,
+    RecipeIngredient,
+    Favorite,
+    PurchaseList,
+)
 
 
 admin.site.register(RecipeIngredient)
@@ -51,3 +58,8 @@ class FavoriteAdmin(admin.ModelAdmin):
         'recipe',
     )
     search_fields = ('recipe__name',)
+
+
+@admin.register(PurchaseList)
+class PurchaseListAdmin(admin.ModelAdmin):
+    pass

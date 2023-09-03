@@ -187,3 +187,6 @@ class PurchaseList(models.Model):
                 name='unique_purchase_list_constraint'
             ),
         ]
+
+    def __str__(self):
+        return f'{self.owner} -- {self.recipe}'
