@@ -12,12 +12,31 @@ class IngredientInline(admin.TabularInline):
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    pass
+    list_display = (
+        'name',
+        'measurement_unit',
+    )
+    list_filter = ('name',)
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'author',
+        'get_favorites_count',
+    )
+    list_filter = (
+        'author',
+        'name',
+        'tags',
+    )
     inlines = (IngredientInline,)
+
+    def get_favorites_count(self, obj):
+        return obj.favorites.all().count()
+
+    get_favorites_count.short_description = 'Всего в избранном'
 
 
 @admin.register(Tag)
@@ -27,4 +46,8 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
-    pass
+    list_display = (
+        'user',
+        'recipe',
+    )
+    search_fields = ('recipe__name',)

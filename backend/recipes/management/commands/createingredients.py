@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandParser
 from django.db import IntegrityError
 
-from recipes.models import Ingridient
+from recipes.models import Ingredient
 
 
 class Command(BaseCommand):
@@ -22,11 +22,10 @@ class Command(BaseCommand):
             rows = csv.DictReader(f, fieldnames=['name', 'measurement_unit'])
             for row in rows:
                 try:
-                    Ingridient.objects.get_or_create(**row)
+                    Ingredient.objects.get_or_create(**row)
                 except IntegrityError:
                     print('Ingredient already added')
                     continue
         self.stdout.write(
             self.style.SUCCESS('Successfully created ingridients')
         )
-
