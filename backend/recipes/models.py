@@ -183,7 +183,7 @@ class PurchaseList(models.Model):
         ordering = ('owner',)
         constraints = [
             models.UniqueConstraint(
-                fields=('user', 'recipe'),
+                fields=('owner', 'recipe'),
                 name='unique_purchase_list_constraint'
             ),
         ]
