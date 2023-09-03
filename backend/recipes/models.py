@@ -25,17 +25,17 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         'Ingredient',
         through='RecipeIngredient',
-        verbose_name='Ингридиенты',
+        verbose_name='Ингредиенты',
         related_name='+'
     )
-    is_favorited = models.BooleanField(
-        default=False,
-        verbose_name='В избранном'
-    )
-    is_in_shoping_cart = models.BooleanField(
-        default=False,
-        verbose_name='В корзине',
-    )
+    # is_favorited = models.BooleanField(
+    #     default=False,
+    #     verbose_name='В избранном'
+    # )
+    # in_purchase_list = models.BooleanField(
+    #     default=False,
+    #     verbose_name='В списке покупок',
+    # )
     name = models.CharField(
         max_length=200,
         verbose_name='Название'
@@ -102,8 +102,8 @@ class Ingredient(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Ингридиент'
-        verbose_name_plural = 'Ингридиенты'
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
         ordering = ('name',)
 
     def __str__(self) -> str:
@@ -114,12 +114,14 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        related_name='ingredient',
         verbose_name='Рецепт'
     )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        verbose_name='Ингрeдиент'
+        related_name='recipe',
+        verbose_name='Ингредиент'
     )
     ingredient_quantity = models.IntegerField(
         validators=(MinValueValidator(1),),
@@ -127,8 +129,8 @@ class RecipeIngredient(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Ингридиент в рецепте'
-        verbose_name_plural = 'Ингридиенты в рецепте'
+        verbose_name = 'Ингредиент в рецепте'
+        verbose_name_plural = 'Ингредиенты в рецепте'
         ordering = ('recipe',)
 
     def __str__(self):
@@ -145,7 +147,7 @@ class Favorite(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='favorites',
+        related_name='in_favorites',
         verbose_name='В избранном'
     )
 
@@ -154,6 +156,34 @@ class Favorite(models.Model):
         verbose_name_plural = 'Избранное'
         ordering = ('user',)
         constraints = [
-            models.UniqueConstraint(fields=['user', 'recipe'],
-                                    name='unique_favorites_constraint'),
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='unique_favorites_constraint'
+            ),
+        ]
+
+
+class PurchaseList(models.Model):
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='purchase_list',
+        verbose_name='Владелец списка'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='in_purchase_list',
+        verbose_name='Рецепт'
+    )
+
+    class Meta:
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
+        ordering = ('owner',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='unique_purchase_list_constraint'
+            ),
         ]
