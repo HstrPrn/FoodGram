@@ -14,8 +14,7 @@ class User(AbstractUser):
         validators=[
             RegexValidator(
                 regex=REGEX,
-                message='Поле содержит'
-                        ' недопустимые символы'
+                message='Поле содержит недопустимые символы'
             )
         ]
     )
@@ -32,9 +31,17 @@ class User(AbstractUser):
         max_length=150,
         verbose_name='Фамилия'
     )
+    password = models.CharField(
+        max_length=150,
+        verbose_name='password'
+    )
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ('email', 'first_name', 'last_name')
+    REQUIRED_FIELDS = (
+        'email',
+        'first_name',
+        'last_name',
+    )
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -50,16 +57,12 @@ class Follow(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
         related_name='follower',
         verbose_name='Подписчик'
     )
     author = models.ForeignKey(
         User,
         models.CASCADE,
-        blank=True,
-        null=True,
         related_name='following',
         verbose_name='Подписка'
     )
@@ -72,8 +75,10 @@ class Follow(models.Model):
                 check=~models.Q(user=models.F('author')),
                 name='name'
             ),
-            models.UniqueConstraint(fields=['user', 'author'],
-                                    name='unique_follow_constraint'),
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_follow_constraint'
+            ),
         ]
 
     def __str__(self):
