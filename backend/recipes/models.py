@@ -8,7 +8,7 @@ User = get_user_model()
 
 
 class Recipe(models.Model):
-    tag = models.ForeignKey(
+    tags = models.ForeignKey(
         'Tag',
         on_delete=models.SET_NULL,
         blank=True,
@@ -22,9 +22,9 @@ class Recipe(models.Model):
         related_name='recipe',
         verbose_name='Автор'
     )
-    ingredient = models.ManyToManyField(
+    ingredients = models.ManyToManyField(
         'Ingredient',
-        through='RecipeIngredients',
+        through='RecipeIngredient',
         verbose_name='Ингридиенты',
         related_name='+'
     )
@@ -110,13 +110,13 @@ class Ingredient(models.Model):
         return self.name
 
 
-class RecipeIngredients(models.Model):
+class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт'
     )
-    ingrideent = models.ForeignKey(
+    ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
         verbose_name='Ингрeдиент'
@@ -125,3 +125,34 @@ class RecipeIngredients(models.Model):
         validators=(MinValueValidator(1),),
         verbose_name='Колличество ингредиента'
     )
+
+    # class Meta:
+    #     verbose_name = 
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name='favorites',
+        verbose_name='Пользователь'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name='in_favorites',
+        verbose_name='В избранном'
+    )
+
+    class Meta:
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
+        ordering = ('user',)
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'recipe'],
+                                    name='unique_favorites_constraint'),
+        ]
