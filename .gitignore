@@ -97,6 +97,5 @@ dmypy.json
 
 .idea
 
-backend/static
-
-backend/media
+/static/
+/media/
