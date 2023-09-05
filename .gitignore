@@ -97,8 +97,6 @@ dmypy.json
 
 .idea
 
-static/
-!static/.gitkeep
+*/static/
 
-media/
-!media/.gitkeep
+*/media/
