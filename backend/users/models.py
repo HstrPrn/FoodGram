@@ -3,7 +3,7 @@ from django.core.validators import RegexValidator
 from django.db import models
 
 
-REGEX = r'^[\w.@+-]+\Z'
+USERNAME_REGEX = r'^[\w.@+-]+\Z'
 
 
 class User(AbstractUser):
@@ -13,7 +13,7 @@ class User(AbstractUser):
         verbose_name='Пользователь',
         validators=[
             RegexValidator(
-                regex=REGEX,
+                regex=USERNAME_REGEX,
                 message='Поле содержит недопустимые символы'
             )
         ]

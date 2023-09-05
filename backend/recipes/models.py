@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
-from django.utils.text import slugify
 
+
+HEX_COLOR_REGEX = r'^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$'
 
 User = get_user_model()
 
@@ -28,21 +29,20 @@ class Recipe(models.Model):
         verbose_name='Ингредиенты',
         related_name='+'
     )
-    # is_favorited = models.BooleanField(
-    #     default=False,
-    #     verbose_name='В избранном'
-    # )
-    # in_purchase_list = models.BooleanField(
-    #     default=False,
-    #     verbose_name='В списке покупок',
-    # )
+    is_favorited = models.BooleanField(
+        default=False,
+        verbose_name='В избранном'
+    )
+    is_in_shopping_cart = models.BooleanField(
+        default=False,
+        verbose_name='В списке покупок',
+    )
     name = models.CharField(
         max_length=200,
         verbose_name='Название'
     )
     image = models.ImageField(
         upload_to='recipe',
-        blank=True,                 # сделать обязательным
         verbose_name='Картинка'
     )
     text = models.TextField(
@@ -70,7 +70,13 @@ class Tag(models.Model):
     )
     color = models.CharField(
         max_length=7,
-        verbose_name='Цвет'
+        verbose_name='Цвет',
+        validators=(
+            RegexValidator(
+                HEX_COLOR_REGEX,
+                message='Цвет должен быть указан в Hex формате'
+            ),
+        )
     )
     slug = models.SlugField(
         max_length=200,
@@ -84,10 +90,6 @@ class Tag(models.Model):
 
     def __str__(self) -> str:
         return self.name
-
-    def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
-        super(Tag, self).save(*args, **kwargs)
 
 
 class Ingredient(models.Model):
@@ -107,7 +109,7 @@ class Ingredient(models.Model):
         ordering = ('name',)
 
     def __str__(self) -> str:
-        return self.name
+        return f'{self.name} ({self.measurement_unit})'
 
 
 class RecipeIngredient(models.Model):
@@ -148,7 +150,7 @@ class Favorite(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         related_name='in_favorites',
-        verbose_name='В избранном'
+        verbose_name='Избранное'
     )
 
     class Meta:
@@ -163,17 +165,17 @@ class Favorite(models.Model):
         ]
 
 
-class PurchaseList(models.Model):
+class ShoppingCart(models.Model):
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='purchase_list',
+        related_name='cart',
         verbose_name='Владелец списка'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='in_purchase_list',
+        related_name='in_cart',
         verbose_name='Рецепт'
     )
 
@@ -184,7 +186,7 @@ class PurchaseList(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=('owner', 'recipe'),
-                name='unique_purchase_list_constraint'
+                name='unique_shopping_cart_constraint'
             ),
         ]
 

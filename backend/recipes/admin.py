@@ -6,7 +6,7 @@ from .models import (
     Ingredient,
     RecipeIngredient,
     Favorite,
-    PurchaseList,
+    ShoppingCart,
 )
 
 
@@ -41,14 +41,18 @@ class RecipeAdmin(admin.ModelAdmin):
     inlines = (IngredientInline,)
 
     def get_favorites_count(self, obj):
-        return obj.favorites.all().count()
+        return obj.in_favorites.count()
 
     get_favorites_count.short_description = 'Всего в избранном'
 
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    prepopulated_fields = {'slug': ('name',)}
+    list_display = (
+        'name',
+        'color',
+        'slug',
+    )
 
 
 @admin.register(Favorite)
@@ -60,6 +64,9 @@ class FavoriteAdmin(admin.ModelAdmin):
     search_fields = ('recipe__name',)
 
 
-@admin.register(PurchaseList)
-class PurchaseListAdmin(admin.ModelAdmin):
-    pass
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(admin.ModelAdmin):
+    list_display = (
+        'owner',
+        'recipe',
+    )
