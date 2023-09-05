@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
@@ -9,13 +10,10 @@ User = get_user_model()
 
 
 class Recipe(models.Model):
-    tags = models.ForeignKey(
+    tags = models.ManyToManyField(
         'Tag',
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
         related_name='recipes',
-        verbose_name='Список тегов'
+        verbose_name='Список тегов',
     )
     author = models.ForeignKey(
         User,
@@ -64,8 +62,8 @@ class Recipe(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(
-        unique=True,
         max_length=200,
+        unique=True,
         verbose_name='Название'
     )
     color = models.CharField(
@@ -80,6 +78,7 @@ class Tag(models.Model):
     )
     slug = models.SlugField(
         max_length=200,
+        unique=True,
         verbose_name='Слаг'
     )
 
@@ -126,7 +125,12 @@ class RecipeIngredient(models.Model):
         verbose_name='Ингредиент'
     )
     ingredient_quantity = models.IntegerField(
-        validators=(MinValueValidator(1),),
+        validators=(
+            MinValueValidator(
+                limit_value=1,
+                message='Укажите количество'
+            ),
+        ),
         verbose_name='Колличество ингредиента'
     )
 
@@ -157,12 +161,15 @@ class Favorite(models.Model):
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
         ordering = ('user',)
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=('user', 'recipe'),
                 name='unique_favorites_constraint'
             ),
-        ]
+        )
+
+    def __str__(self):
+        return f'{self.user} добавил в избранное {self.recipe}'
 
 
 class ShoppingCart(models.Model):
@@ -183,12 +190,12 @@ class ShoppingCart(models.Model):
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
         ordering = ('owner',)
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=('owner', 'recipe'),
                 name='unique_shopping_cart_constraint'
             ),
-        ]
+        )
 
     def __str__(self):
         return f'{self.owner} -- {self.recipe}'

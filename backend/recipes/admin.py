@@ -17,6 +17,12 @@ class IngredientInline(admin.TabularInline):
     model = Recipe.ingredients.through
 
 
+class TagInline(admin.TabularInline):
+    model = Recipe.tags.through
+    verbose_name = 'Тег рецепта'
+    verbose_name_plural = 'Теги рецепта'
+
+
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = (
@@ -33,12 +39,16 @@ class RecipeAdmin(admin.ModelAdmin):
         'author',
         'get_favorites_count',
     )
+    exclude = ('tags',)
     list_filter = (
         'author',
         'name',
         'tags',
     )
-    inlines = (IngredientInline,)
+    inlines = (
+        IngredientInline,
+        TagInline,
+    )
 
     def get_favorites_count(self, obj):
         return obj.in_favorites.count()
