@@ -3,7 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from api.urls import urlpatterns
+from api.urls import urlpatterns as api_urls
 
 
 admin.site.site_header = 'Foodgram'
@@ -11,7 +11,7 @@ admin.site.site_title = 'Foodgram'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include(urlpatterns))
+    path('api/', include(api_urls))
 ]
 
 if settings.DEBUG:
