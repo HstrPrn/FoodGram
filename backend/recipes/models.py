@@ -40,7 +40,7 @@ class Recipe(models.Model):
         verbose_name='Название'
     )
     image = models.ImageField(
-        upload_to='recipe',
+        upload_to='recipe/images/',
         verbose_name='Картинка'
     )
     text = models.TextField(
@@ -154,7 +154,7 @@ class Favorite(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         related_name='in_favorites',
-        verbose_name='Избранное'
+        verbose_name='Рецепт'
     )
 
     class Meta:

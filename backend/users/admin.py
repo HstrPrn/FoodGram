@@ -24,7 +24,7 @@ class UserAdmin(admin.ModelAdmin):
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
     list_display = (
-        'author',
         'user',
+        'author',
     )
     search_fields = ('recipe__name',)

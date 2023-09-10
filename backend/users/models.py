@@ -36,9 +36,9 @@ class User(AbstractUser):
         verbose_name='password'
     )
 
-    USERNAME_FIELD = 'username'
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = (
-        'email',
+        'username',
         'first_name',
         'last_name',
     )
