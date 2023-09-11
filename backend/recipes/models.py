@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
@@ -10,6 +9,8 @@ User = get_user_model()
 
 
 class Recipe(models.Model):
+    """Модель рецепта."""
+
     tags = models.ManyToManyField(
         'Tag',
         related_name='recipes',
@@ -61,6 +62,8 @@ class Recipe(models.Model):
 
 
 class Tag(models.Model):
+    """Модель тега."""
+
     name = models.CharField(
         max_length=200,
         unique=True,
@@ -92,6 +95,8 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
+    """Модель ингредиента."""
+
     name = models.CharField(
         max_length=200,
         verbose_name='Название',
@@ -112,6 +117,8 @@ class Ingredient(models.Model):
 
 
 class RecipeIngredient(models.Model):
+    """Промежуточная модель в М2М связи для рецепта и ингредиента."""
+
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -144,6 +151,8 @@ class RecipeIngredient(models.Model):
 
 
 class Favorite(models.Model):
+    """Модель избранных рецептов пользователя."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -173,6 +182,8 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
+    """Модель списка покупок пользователя."""
+
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

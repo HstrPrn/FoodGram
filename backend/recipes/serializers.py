@@ -9,6 +9,8 @@ from users.serializers import UserSerializer
 
 
 class Base64ImageField(serializers.ImageField):
+    """Кастомное поле для обработки изображений."""
+
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
@@ -19,6 +21,8 @@ class Base64ImageField(serializers.ImageField):
 
 
 class TagSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Tag."""
+
     class Meta:
         model = Tag
         fields = (
@@ -30,6 +34,8 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Ingredients."""
+
     class Meta:
         model = Ingredient
         fields = (
@@ -40,6 +46,8 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
+    """Сериальзатор для чтения модели Recipe."""
+
     tags = TagSerializer(many=True, read_only=True)
 
     author = UserSerializer(read_only=True)
@@ -90,6 +98,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(RecipeReadSerializer):
+    """Сериализатор для создания, изменения и удаления модели Recipe."""
+
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
         many=True,
@@ -105,8 +115,8 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         recipe.tags.set(tags)
         return recipe
 
-    def to_representation(self, instance):
+    def to_representation(self, obj):
         return RecipeReadSerializer(
-            instance,
+            obj,
             context={'request': self.context.get('request')}
         ).data

@@ -7,6 +7,7 @@ USERNAME_REGEX = r'^[\w.@+-]+\Z'
 
 
 class User(AbstractUser):
+    """Кастомная модель пользователя."""
     username = models.CharField(
         max_length=150,
         unique=True,
@@ -54,6 +55,8 @@ class User(AbstractUser):
 
 
 class Follow(models.Model):
+    """Модель подписки пользователя на автора рецепта."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
