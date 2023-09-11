@@ -4,7 +4,7 @@ from django.core.files.base import ContentFile
 from django.db.models import F
 from rest_framework import serializers
 
-from .models import Ingredient, Tag, Recipe, RecipeIngredient
+from .models import Ingredient, Tag, Recipe, RecipeIngredient, Favorite
 from users.serializers import UserSerializer
 
 
@@ -89,11 +89,32 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         return False
 
     def get_ingredients(self, obj):
+        """
+        Получение полей модели Ingredients с дополнительным полем amount
+        из связанной таблицы RecipeIngredient.
+        """
+
         return obj.ingredients.values(
             'id',
             'name',
             'measurement_unit',
             amount=F('recipe__ingredient_quantity')
+        )
+
+
+class RecipeIngredientsSerializer(serializers.ModelSerializer):
+    """Сериализатор промежуточной таблицы RecipeIngredient."""
+
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all()
+    )
+    amount = serializers.IntegerField(source='ingredient_quantity')
+
+    class Meta:
+        model = RecipeIngredient
+        fields = (
+            'id',
+            'amount',
         )
 
 
@@ -104,19 +125,97 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         queryset=Tag.objects.all(),
         many=True,
     )
+    ingredients = RecipeIngredientsSerializer(many=True)
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
-        # ingredients = validated_data.pop('ingredients')
+        ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(
             **validated_data,
             author=super()._get_user()
         )
+        recipe.ingredient.set(
+            self.create_recipe_ingredients_relations(recipe, ingredients)
+        )
         recipe.tags.set(tags)
+        recipe.save()
         return recipe
 
-    def to_representation(self, obj):
+    def update(self, instance, validated_data):
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        instance.image = validated_data.get('image', instance.image)
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get(
+            'cooking_time', instance.cooking_time
+        )
+        instance.ingredients.clear()
+        instance.ingredient.set(
+            self._create_recipe_ingredients_relations(instance, ingredients)
+        )
+        instance.tags.set(tags)
+        instance.save()
+        return instance
+
+    def _create_recipe_ingredients_relations(self, recipe, ingredients):
+        """
+        Создание списка объектов в промежуточной таблице RecipeIngredient.
+        """
+
+        return (
+            RecipeIngredient.objects.bulk_create(
+                [RecipeIngredient(
+                    recipe=recipe,
+                    ingredient=ingredient.get('id'),
+                    ingredient_quantity=ingredient.get('ingredient_quantity')
+                ) for ingredient in ingredients]
+            )
+        )
+
+    def to_representation(self, instance):
         return RecipeReadSerializer(
-            obj,
-            context={'request': self.context.get('request')}
+            instance,
+            context=self.context
         ).data
+
+
+class RecipeShortSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(
+        read_only=True
+    )
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time',
+        )
+        extra_kwargs = {
+            'id': {'read_only': True},
+            'name': {'read_only': True},
+            'cooking_time': {'read_only': True},
+        }
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+    recipe = serializers.SlugRelatedField(
+        slug_field='id',
+        queryset=Recipe.objects.all()
+    )
+
+    class Meta:
+        model = Favorite
+        fields = (
+            'user',
+            'recipe',
+        )
+
+    def to_representation(self, instance):
+        return RecipeShortSerializer(
+            instance.recipe,
+            context=self.context
+        )
