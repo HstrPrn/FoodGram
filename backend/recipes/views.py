@@ -1,35 +1,48 @@
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from django.db import IntegrityError
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Ingredient, Tag, Recipe, Favorite
-from . serializers import (
+from .models import (
+    Ingredient,
+    Tag,
+    Recipe,
+    Favorite,
+    ShoppingCart,
+    RecipeIngredient,
+)
+from .serializers import (
     IngredientSerializer,
     RecipeCreateSerializer,
     RecipeReadSerializer,
     TagSerializer,
-    RecipeShortSerializer,
+    FavoriteSerializer,
+    ShoppingCartSerializer
 )
+from .permissions import IsAuthorOrAdmin
+
+
+User = get_user_model()
 
 
 class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
-    serializer_class = TagSerializer
+    serializerializer_class = TagSerializer
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerializer
+    serializerializer_class = IngredientSerializer
 
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
 
-    def get_serializer_class(self):
+    def get_serializerializer_class(self):
         if self.action in ('list', 'retrieve'):
             return RecipeReadSerializer
         return RecipeCreateSerializer
@@ -37,30 +50,72 @@ class RecipeViewSet(ModelViewSet):
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
             self.permission_classes = (AllowAny,)
+        elif self.action == 'partial_update':
+            self.permission_classes = (IsAuthorOrAdmin,)
         return super().get_permissions()
+
+    def __post_action_view(self, request, pk=None, serializer_class=None):
+        serializer = serializer_class(
+            data={'id': pk},
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def __delete_action_view(self, request, pk=None, model=None, message=None):
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if not model.objects.filter(
+            user=request.user,
+            recipe=recipe
+        ).exists():
+            raise ValidationError({
+                'error': message
+            })
+
+        model.objects.filter(
+            user=request.user,
+            recipe=recipe
+        ).delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         methods=('post', 'delete'),
         permission_classes=(IsAuthenticated,),
         detail=True,
-        url_name='favorite-create',
     )
     def favorite(self, request, pk=None):
-        recipe = get_object_or_404(Recipe, pk=pk)
-        if self.request.method == 'POST':
-            serializer = RecipeShortSerializer(
-                recipe,
-                data=request.data,
-                context={'request': request}
+        if request.method == 'POST':
+            return self.__post_action_view(request, pk, FavoriteSerializer)
+
+        message = 'Рецепт не найден в избранном.'
+        return self.__delete_action_view(request, pk, Favorite, message)
+
+    @action(
+        methods=('get', 'post', 'delete'),
+        permission_classes=(IsAuthenticated,),
+        detail=True,
+    )
+    def shopping_cart(self, request, pk=None):
+        if request.method == 'POST':
+            return self.__post_action_view(request, pk, ShoppingCartSerializer)
+        elif request.method == 'DELETE':
+            message = 'Рецепт не найден в списке покупок.'
+            return self.__delete_action_view(
+                request, pk, ShoppingCart, message
             )
-            serializer.is_valid(raise_exception=True)
-            Favorite.objects.create(
-                user=self.request.user,
-                recipe=recipe
-            )
-            return Response(serializer.data, status=201)
-        Favorite.objects.filter(
-            user=self.request.user,
-            recipe=recipe
-        ).delete()
-        return Response(status=204)
+
+    @action(
+        methods=('get', 'post', 'delete'),
+        permission_classes=(IsAuthenticated,),
+    )
+    def download_shopping_card(self, request):
+        recipes = request.user.favorites.all()
+        ingredients = RecipeIngredient.objects.filter(
+            
+
+        )
+        shopping_list = {}
+        
