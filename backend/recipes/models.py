@@ -4,6 +4,7 @@ from django.db import models
 
 
 HEX_COLOR_REGEX = r'^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$'
+MIN_VALUE = 1
 
 User = get_user_model()
 
@@ -48,7 +49,7 @@ class Recipe(models.Model):
         verbose_name='Описание'
     )
     cooking_time = models.IntegerField(
-        validators=(MinValueValidator(1),),
+        validators=(MinValueValidator(MIN_VALUE),),
         verbose_name='Время готовки'
     )
 
@@ -132,12 +133,7 @@ class RecipeIngredient(models.Model):
         verbose_name='Ингредиент'
     )
     ingredient_quantity = models.IntegerField(
-        validators=(
-            MinValueValidator(
-                limit_value=1,
-                message='Укажите количество'
-            ),
-        ),
+        validators=(MinValueValidator(MIN_VALUE),),
         verbose_name='Колличество ингредиента'
     )
 
@@ -145,6 +141,12 @@ class RecipeIngredient(models.Model):
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецепте'
         ordering = ('recipe',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=('recipe', 'ingredient'),
+                name='recipe_ingredient_unique_constraint'
+            ),
+        )
 
     def __str__(self):
         return f'{self.recipe} -- {self.ingredient}'
@@ -184,7 +186,7 @@ class Favorite(models.Model):
 class ShoppingCart(models.Model):
     """Модель списка покупок пользователя."""
 
-    owner = models.ForeignKey(
+    user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='cart',
@@ -200,13 +202,13 @@ class ShoppingCart(models.Model):
     class Meta:
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
-        ordering = ('owner',)
+        ordering = ('user',)
         constraints = (
             models.UniqueConstraint(
-                fields=('owner', 'recipe'),
+                fields=('user', 'recipe'),
                 name='unique_shopping_cart_constraint'
             ),
         )
 
     def __str__(self):
-        return f'{self.owner} -- {self.recipe}'
+        return f'{self.user} -- {self.recipe}'
