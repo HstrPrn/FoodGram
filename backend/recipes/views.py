@@ -107,15 +107,16 @@ class RecipeViewSet(ModelViewSet):
                 request, pk, ShoppingCart, message
             )
 
-    @action(
-        methods=('get', 'post', 'delete'),
-        permission_classes=(IsAuthenticated,),
-    )
-    def download_shopping_card(self, request):
-        recipes = request.user.favorites.all()
-        ingredients = RecipeIngredient.objects.filter(
-            
+    # @action(
+    #     methods=('get', 'post', 'delete'),
+    #     permission_classes=(IsAuthenticated,),
+    #     detail=False
+    # )
+    # def download_shopping_card(self, request):
+    #     recipes = request.user.favorites.all()
+    #     ingredients = RecipeIngredient.objects.filter(
 
-        )
-        shopping_list = {}
+
+    #     )
+    #     shopping_list = {}
         
