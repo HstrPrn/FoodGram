@@ -7,10 +7,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 
 from .filters import RecipeFilter
 from .models import (
@@ -31,6 +31,7 @@ from .serializers import (
 )
 from .permissions import IsAuthorOrAdmin
 from .utils import download_csv
+from utils.paginators import CustomPaginator
 
 
 User = get_user_model()
@@ -47,6 +48,8 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('^name',)
 
 
 class RecipeViewSet(ModelViewSet):
@@ -54,8 +57,7 @@ class RecipeViewSet(ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     page_size = 10
-    pagination_class = PageNumberPagination
-    pagination_class.page_size = page_size
+    pagination_class = CustomPaginator
     http_method_names = (
         'get',
         'post',
