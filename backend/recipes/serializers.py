@@ -84,14 +84,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         return self.context.get('request').user
 
     def get_is_favorited(self, obj):
-        user = self._get_user()
+        user = self.__get_user()
         if (user.is_authenticated
            and user.favorites.filter(recipe=obj).exists()):
             return True
         return False
 
     def get_is_in_shopping_cart(self, obj):
-        user = self._get_user()
+        user = self.__get_user()
         if (user.is_authenticated
            and user.cart.filter(recipe=obj).exists()):
             return True
@@ -149,7 +149,6 @@ class RecipeCreateSerializer(RecipeReadSerializer):
             self._create_recipe_ingredients_relations(recipe, ingredients)
         )
         recipe.tags.set(tags)
-        recipe.save()
         return recipe
 
     def update(self, instance, validated_data):

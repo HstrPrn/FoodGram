@@ -1,12 +1,18 @@
+import csv
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from django.db.models import Sum
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from .filters import RecipeFilter
 from .models import (
     Ingredient,
     Tag,
@@ -24,6 +30,7 @@ from .serializers import (
     ShoppingCartSerializer
 )
 from .permissions import IsAuthorOrAdmin
+from .utils import download_csv
 
 
 User = get_user_model()
@@ -31,18 +38,32 @@ User = get_user_model()
 
 class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
-    serializerializer_class = TagSerializer
+    serializer_class = TagSerializer
+    permission_classes = (AllowAny,)
+    lookup_field = 'slug'
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
-    serializerializer_class = IngredientSerializer
+    serializer_class = IngredientSerializer
+    permission_classes = (AllowAny,)
 
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
+    page_size = 10
+    pagination_class = PageNumberPagination
+    pagination_class.page_size = page_size
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
+    )
 
-    def get_serializerializer_class(self):
+    def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return RecipeReadSerializer
         return RecipeCreateSerializer
@@ -101,22 +122,21 @@ class RecipeViewSet(ModelViewSet):
     def shopping_cart(self, request, pk=None):
         if request.method == 'POST':
             return self.__post_action_view(request, pk, ShoppingCartSerializer)
-        elif request.method == 'DELETE':
-            message = 'Рецепт не найден в списке покупок.'
-            return self.__delete_action_view(
-                request, pk, ShoppingCart, message
-            )
 
-    # @action(
-    #     methods=('get', 'post', 'delete'),
-    #     permission_classes=(IsAuthenticated,),
-    #     detail=False
-    # )
-    # def download_shopping_card(self, request):
-    #     recipes = request.user.favorites.all()
-    #     ingredients = RecipeIngredient.objects.filter(
+        message = 'Рецепт не найден в списке покупок.'
+        return self.__delete_action_view(
+            request, pk, ShoppingCart, message
+        )
 
-
-    #     )
-    #     shopping_list = {}
-        
+    @action(
+        methods=('get',),
+        permission_classes=(IsAuthenticated,),
+        detail=False
+    )
+    def download_shopping_cart(self, request):
+        ingredients = RecipeIngredient.objects.filter(
+            recipe__in_cart__user=request.user
+        ).values('ingredient__name', 'ingredient__measurement_unit').annotate(
+            amount=Sum('ingredient_quantity')
+        )
+        return download_csv(ingredients)
