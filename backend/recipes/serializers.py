@@ -4,7 +4,7 @@ from django.core.files.base import ContentFile
 from django.db import IntegrityError
 from django.db.models import F
 from rest_framework import serializers
-from rest_framework.validators import ValidationError, UniqueTogetherValidator
+from rest_framework.validators import ValidationError
 
 from .models import (
     Ingredient,

@@ -3,11 +3,11 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-5jr=0$t96*ift#8=tvgy4jnxc7_6$g$i)l$^b&ej1szwn@@-&s'
+SECRET_KEY = os.getenv('SECRET_KEY', '')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', True) == 'True'
 
-ALLOWED_HOSTS = ['127.0.0.1', '84.201.142.155', 'localhost']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', [])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -56,12 +56,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'foodgram_backend.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.getenv('PG_NAME', 'name'),
+            'USER': os.getenv('PG_USER', 'user'),
+            'PASSWORD': os.getenv('PG_PASSWORD', 'password'),
+            'HOST': os.getenv('PG_HOST', 'host'),
+            'PORT': os.getenv('PG_PORT', 2345),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
