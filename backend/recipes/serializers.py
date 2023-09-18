@@ -210,6 +210,7 @@ class RecipeShortSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
+    """Сериализатор модели избранных рецептов"""
     id = serializers.PrimaryKeyRelatedField(
         queryset=Recipe.objects.all(),
         write_only=True
@@ -238,6 +239,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(FavoriteSerializer):
+    """Сериализатор корзины поккупок"""
     class Meta(FavoriteSerializer.Meta):
         model = ShoppingCart
 

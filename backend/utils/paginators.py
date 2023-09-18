@@ -1,3 +1,5 @@
+"""Кастомные пагинаторы"""
+
 from rest_framework import pagination
 
 

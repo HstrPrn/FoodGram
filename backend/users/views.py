@@ -17,6 +17,7 @@ User = get_user_model()
 
 
 class UserViewSet(BaseUserViewSet):
+    """Вьюсет пользователей и подписок"""
     pagination_class = CustomPaginator
 
     @action(

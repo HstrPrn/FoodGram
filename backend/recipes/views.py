@@ -36,6 +36,7 @@ User = get_user_model()
 
 
 class TagViewSet(ReadOnlyModelViewSet):
+    """Вьюесет тэгов."""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
@@ -43,6 +44,7 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
+    """Вьюсет ингредиентов."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
@@ -51,6 +53,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
+    """Вьюсет рецептов."""
     queryset = Recipe.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
@@ -75,6 +78,7 @@ class RecipeViewSet(ModelViewSet):
         return super().get_permissions()
 
     def __post_action_view(self, request, pk=None, serializer_class=None):
+        """Обработчик post запросов."""
         serializer = serializer_class(
             data={'id': pk},
             context={'request': request}
@@ -85,6 +89,7 @@ class RecipeViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def __delete_action_view(self, request, pk=None, model=None, message=None):
+        """Обработчик delete запросов."""
         recipe = get_object_or_404(Recipe, pk=pk)
         if not model.objects.filter(
             user=request.user,
