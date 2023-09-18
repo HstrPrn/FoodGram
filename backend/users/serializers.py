@@ -88,9 +88,3 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def get_recipes_count(self, obj):
         return obj.author.recipes.count()
-
-
-class FollowListSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Follow
-        fields = '__all__'
