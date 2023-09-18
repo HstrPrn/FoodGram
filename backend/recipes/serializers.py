@@ -14,7 +14,7 @@ from .models import (
     Favorite,
     ShoppingCart
 )
-from users.serializers import UserSerializer
+from users.serializers import UserReadSerializer
 
 
 class Base64ImageField(serializers.ImageField):
@@ -59,7 +59,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     tags = TagSerializer(many=True, read_only=True)
 
-    author = UserSerializer(read_only=True)
+    author = UserReadSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
@@ -206,11 +206,7 @@ class RecipeShortSerializer(serializers.ModelSerializer):
             'image',
             'cooking_time',
         )
-        extra_kwargs = {
-            'id': {'read_only': True},
-            'name': {'read_only': True},
-            'cooking_time': {'read_only': True},
-        }
+        read_only_fields = '__all__'
 
 
 class FavoriteSerializer(serializers.ModelSerializer):

@@ -1,5 +1,3 @@
-import csv
-
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum
@@ -29,7 +27,7 @@ from .serializers import (
     FavoriteSerializer,
     ShoppingCartSerializer
 )
-from .permissions import IsAuthorOrAdmin
+from .permissions import IsAuthor
 from .utils import download_csv
 from utils.paginators import CustomPaginator
 
@@ -56,7 +54,6 @@ class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    page_size = 10
     pagination_class = CustomPaginator
     http_method_names = (
         'get',
@@ -74,7 +71,7 @@ class RecipeViewSet(ModelViewSet):
         if self.action in ('list', 'retrieve'):
             self.permission_classes = (AllowAny,)
         elif self.action == 'partial_update':
-            self.permission_classes = (IsAuthorOrAdmin,)
+            self.permission_classes = (IsAuthor,)
         return super().get_permissions()
 
     def __post_action_view(self, request, pk=None, serializer_class=None):
