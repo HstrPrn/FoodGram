@@ -1,6 +1,6 @@
-from rest_framework.pagination import PageNumberPagination
+from rest_framework import pagination
 
 
-class CustomPaginator(PageNumberPagination):
-    page_size_query_param = 'limit'
+class CustomPaginator(pagination.PageNumberPagination):
     page_size = 10
+    page_size_query_param = 'limit'
