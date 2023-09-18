@@ -4,29 +4,35 @@ from djoser.serializers import (
     UserCreateSerializer as BaseCreateSerializer,
 )
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from .models import Follow
+
 
 User = get_user_model()
 
 
-class User:
-    pass
-
-
-class UserSerializer(BaseUserSerializer):
+class UserCreateSerializer(BaseCreateSerializer):
     """Сериализатор для кастомной модели пользователя."""
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
 
-    class Meta(BaseUserSerializer.Meta):
+    class Meta(BaseCreateSerializer.Meta):
+        model = User
         fields = (
             'email',
             'id',
             'username',
             'first_name',
             'last_name',
-            'is_subscribed',
+            'password',
         )
+        read_only_fields = None
+
+
+class UserReadSerializer(BaseUserSerializer):
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
+
+    class Meta(BaseUserSerializer.Meta):
+        fields = ('is_subscribed',) + BaseUserSerializer.Meta.fields
 
     def _get_user(self):
         return self.context.get('request').user
@@ -37,6 +43,54 @@ class UserSerializer(BaseUserSerializer):
             return False
         return user.follower.filter(author=obj).exists()
 
-    def create(self, validated_data):
-        user = User(**validated_data)
-        return user
+
+class FollowSerializer(serializers.ModelSerializer):
+    recipes = serializers.SerializerMethodField(read_only=True)
+    recipes_count = serializers.SerializerMethodField(read_only=True)
+    author = UserReadSerializer(read_only=True)
+
+    class Meta:
+        model = Follow
+        fields = (
+            'author',
+            'recipes',
+            'recipes_count',
+            'user',
+            'author_id',
+        )
+        extra_kwargs = {
+            'user': {'write_only': True},
+            'author_id': {'write_only': True,
+                          'source': 'author'},
+        }
+        validators = (
+            UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=('user', 'author'),
+                message='Вы уже подписаны на этого пользователя.'
+            ),
+        )
+
+    def __get_recipes_limit(self):
+        limit = self.context.get('request').query_params.get('recipes_limit')
+        if limit:
+            return int(limit)
+        return None
+
+    def get_recipes(self, obj):
+        limit = self.__get_recipes_limit()
+        return obj.author.recipes.values(
+            'id',
+            'name',
+            'image',
+            'cooking_time'
+        )[:limit]
+
+    def get_recipes_count(self, obj):
+        return obj.author.recipes.count()
+
+
+class FollowListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Follow
+        fields = '__all__'
