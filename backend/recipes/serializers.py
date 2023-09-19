@@ -80,18 +80,18 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'cooking_time'
         )
 
-    def __get_user(self):
+    def _get_user(self):
         return self.context.get('request').user
 
     def get_is_favorited(self, obj):
-        user = self.__get_user()
+        user = self._get_user()
         if (user.is_authenticated
            and user.favorites.filter(recipe=obj).exists()):
             return True
         return False
 
     def get_is_in_shopping_cart(self, obj):
-        user = self.__get_user()
+        user = self._get_user()
         if (user.is_authenticated
            and user.cart.filter(recipe=obj).exists()):
             return True
@@ -135,15 +135,16 @@ class RecipeCreateSerializer(RecipeReadSerializer):
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
         many=True,
+        required=True
     )
-    ingredients = RecipeIngredientsSerializer(many=True)
+    ingredients = RecipeIngredientsSerializer(many=True, required=True)
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(
             **validated_data,
-            author=super().__get_user()
+            author=super()._get_user()
         )
         recipe.ingredient.set(
             self._create_recipe_ingredients_relations(recipe, ingredients)
@@ -162,13 +163,13 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         )
         instance.ingredients.clear()
         instance.ingredient.set(
-            self.__create_recipe_ingredients_relations(instance, ingredients)
+            self._create_recipe_ingredients_relations(instance, ingredients)
         )
         instance.tags.set(tags)
         instance.save()
         return instance
 
-    def __create_recipe_ingredients_relations(self, recipe, ingredients):
+    def _create_recipe_ingredients_relations(self, recipe, ingredients):
         """
         Создание списка объектов в промежуточной таблице RecipeIngredient.
         """
@@ -206,7 +207,7 @@ class RecipeShortSerializer(serializers.ModelSerializer):
             'image',
             'cooking_time',
         )
-        read_only_fields = '__all__'
+        read_only_fields = fields
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
