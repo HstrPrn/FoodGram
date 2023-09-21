@@ -144,7 +144,7 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(
             **validated_data,
-            author=super()._get_user()
+            author=self._get_user()
         )
         recipe.ingredient.set(
             self._create_recipe_ingredients_relations(recipe, ingredients)
@@ -195,10 +195,6 @@ class RecipeCreateSerializer(RecipeReadSerializer):
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
-    image = serializers.ImageField(
-        read_only=True
-    )
-
     class Meta:
         model = Recipe
         fields = (
@@ -216,14 +212,10 @@ class FavoriteSerializer(serializers.ModelSerializer):
         queryset=Recipe.objects.all(),
         write_only=True
     )
-    recipe = RecipeShortSerializer(read_only=True)
 
     class Meta:
         model = Favorite
-        fields = (
-            'recipe',
-            'id',
-        )
+        fields = ('id',)
 
     def create(self, validated_data, message=None):
         if message is None:
