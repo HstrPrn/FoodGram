@@ -24,6 +24,7 @@ from .serializers import (
     RecipeCreateSerializer,
     RecipeReadSerializer,
     TagSerializer,
+    RecipeShortSerializer,
     FavoriteSerializer,
     ShoppingCartSerializer
 )
@@ -54,7 +55,9 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 class RecipeViewSet(ModelViewSet):
     """Вьюсет рецептов."""
-    queryset = Recipe.objects.all()
+    queryset = Recipe.objects.prefetch_related(
+        'tags', 'ingredients'
+    ).select_related('author')
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     pagination_class = CustomPaginator
@@ -77,18 +80,22 @@ class RecipeViewSet(ModelViewSet):
             self.permission_classes = (IsAuthor,)
         return super().get_permissions()
 
-    def __post_action_view(self, request, pk=None, serializer_class=None):
+    def _post_action_view(self, request, pk=None, serializer=None):
         """Обработчик post запросов."""
-        serializer = serializer_class(
+        favorite = serializer(
             data={'id': pk},
             context={'request': request}
         )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        favorite.is_valid(raise_exception=True)
+        favorite.save()
+        recipe = get_object_or_404(Recipe, pk=pk)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            RecipeShortSerializer(recipe).data,
+            status=status.HTTP_200_OK
+        )
 
-    def __delete_action_view(self, request, pk=None, model=None, message=None):
+    def _delete_action_view(self, request, pk=None, model=None, message=None):
         """Обработчик delete запросов."""
         recipe = get_object_or_404(Recipe, pk=pk)
         if not model.objects.filter(
@@ -98,7 +105,6 @@ class RecipeViewSet(ModelViewSet):
             raise ValidationError({
                 'error': message
             })
-
         model.objects.filter(
             user=request.user,
             recipe=recipe
@@ -113,22 +119,22 @@ class RecipeViewSet(ModelViewSet):
     )
     def favorite(self, request, pk=None):
         if request.method == 'POST':
-            return self.__post_action_view(request, pk, FavoriteSerializer)
-
+            message = 'Рецепт уже добавлен в избранное'
+            return self._post_action_view(request, pk, FavoriteSerializer)
         message = 'Рецепт не найден в избранном.'
-        return self.__delete_action_view(request, pk, Favorite, message)
+        return self._delete_action_view(request, pk, Favorite, message)
 
     @action(
-        methods=('get', 'post', 'delete'),
+        methods=('post', 'delete'),
         permission_classes=(IsAuthenticated,),
         detail=True,
     )
     def shopping_cart(self, request, pk=None):
         if request.method == 'POST':
-            return self.__post_action_view(request, pk, ShoppingCartSerializer)
+            return self._post_action_view(request, pk, ShoppingCartSerializer)
 
         message = 'Рецепт не найден в списке покупок.'
-        return self.__delete_action_view(
+        return self._delete_action_view(
             request, pk, ShoppingCart, message
         )
 
@@ -140,7 +146,13 @@ class RecipeViewSet(ModelViewSet):
     def download_shopping_cart(self, request):
         ingredients = RecipeIngredient.objects.filter(
             recipe__in_cart__user=request.user
-        ).values('ingredient__name', 'ingredient__measurement_unit').annotate(
+        ).select_related(
+            'author'
+        ).prefetch_related(
+            'tags', 'ingredients'
+        ).values(
+            'ingredient__name', 'ingredient__measurement_unit'
+        ).annotate(
             amount=Sum('ingredient_quantity')
         )
         return download_csv(ingredients)

@@ -26,6 +26,7 @@ class TagInline(admin.TabularInline):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = (
+        'id',
         'name',
         'measurement_unit',
     )
@@ -35,12 +36,14 @@ class IngredientAdmin(admin.ModelAdmin):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
+        'id',
         'name',
         'author',
         'get_favorites_count',
     )
     exclude = ('tags',)
     list_filter = (
+        'id',
         'author',
         'name',
         'tags',
@@ -59,6 +62,7 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = (
+        'id',
         'name',
         'color',
         'slug',
@@ -68,6 +72,7 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = (
+        'id',
         'user',
         'recipe',
     )
@@ -77,6 +82,7 @@ class FavoriteAdmin(admin.ModelAdmin):
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = (
+        'id',
         'user',
         'recipe',
     )

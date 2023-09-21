@@ -24,7 +24,9 @@ class Command(BaseCommand):
                 try:
                     Ingredient.objects.get_or_create(**row)
                 except IntegrityError:
-                    print('Ingredient already added')
+                    self.stdout.write(self.style.NOTICE(
+                        'Ingredient already added'
+                    ))
                     continue
         self.stdout.write(
             self.style.SUCCESS('Successfully created ingridients')
