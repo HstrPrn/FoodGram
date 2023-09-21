@@ -1,0 +1,22 @@
+name: tests
+on: push
+
+jobs:
+  test:
+    name: Check PEP8
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: |
+          pythpo -m pip install --upgrade pip
+          pip install flake8 flake8-isort
+          pip install -r backend/requirements.txt
+      - name: Test with flake8
+        run: python -m flake8 /backend
+
