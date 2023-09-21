@@ -7,10 +7,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-# from .serializers import UserSerializer
 from utils.paginators import CustomPaginator
 from .models import Follow
-from .serializers import FollowSerializer
+from .serializers import FollowSerializer, FollowingUserSerializer
 
 
 User = get_user_model()
@@ -26,16 +25,20 @@ class UserViewSet(BaseUserViewSet):
         detail=True
     )
     def subscribe(self, request, id=None):
-        author = get_object_or_404(User, pk=id)
+        author = get_object_or_404(User, id=id)
         if request.method == 'POST':
-            serializer = FollowSerializer(
-                data={'author_id': author.id,
-                      'user': request.user.id},
+            follow = FollowSerializer(
+                data={'id': author.id},
                 context={'request': request}
             )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            follow.is_valid(raise_exception=True)
+            follow.save()
+            return Response(
+                FollowingUserSerializer(
+                    author,
+                    context={'request': request}
+                ).data,
+                status=status.HTTP_201_CREATED)
 
         if not Follow.objects.filter(
             user=request.user,
@@ -56,15 +59,18 @@ class UserViewSet(BaseUserViewSet):
         detail=False,
     )
     def subscriptions(self, request):
-        queryset = Follow.objects.filter(user=self.request.user)
+        queryset = User.objects.filter(following__user=request.user.id)
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = FollowSerializer(
+            serializer = FollowingUserSerializer(
                 page,
                 many=True,
                 context={'request': request}
             )
             return self.get_paginated_response(serializer.data)
         return Response(
-            FollowSerializer(queryset, many=True, context={'request': request})
+            FollowingUserSerializer(
+                queryset, many=True,
+                context={'request': request}
+            )
         )
