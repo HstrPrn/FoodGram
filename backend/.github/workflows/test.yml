@@ -1,23 +1,10 @@
-name: Foodgram workflow
-on:
-  pull_request:
-    branches:
-      - main
-    types:
-      - closed
+name: tests
+on: push
+
 
 jobs:
-  if_merged:
-    name: Check success PR into master
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    steps:
-    - run: |
-        echo The PR was merged
-
   test:
     name: Check PEP8
-    needs: if_merged
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
