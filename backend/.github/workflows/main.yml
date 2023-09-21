@@ -3,7 +3,7 @@ name: Foodgram workflow
 on:
   pull_request:
     branches:
-      - main
+      - master
     types:
       - closed
 
