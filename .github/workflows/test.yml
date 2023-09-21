@@ -18,5 +18,5 @@ jobs:
           pip install flake8 flake8-isort
           pip install -r backend/requirements.txt
       - name: Test with flake8
-        run: python -m flake8 /backend
+        run: python -m flake8 backend/.
 
