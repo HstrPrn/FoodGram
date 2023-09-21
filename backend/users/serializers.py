@@ -69,8 +69,9 @@ class FollowingUserSerializer(UserReadSerializer):
     recipes_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta(UserReadSerializer.Meta):
-        fields = (('recipes', 'recipes_count')
-                  + UserReadSerializer.Meta.fields)
+        fields = (
+            ('recipes', 'recipes_count') + UserReadSerializer.Meta.fields
+        )
         read_only_fields = fields
 
     def _get_recipes_limit(self):

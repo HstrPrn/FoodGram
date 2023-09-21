@@ -2,11 +2,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from recipes.views import IngredientViewSet, TagViewSet, RecipeViewSet
 from rest_framework.routers import DefaultRouter
 
-from recipes.views import TagViewSet, IngredientViewSet, RecipeViewSet
 from users.views import UserViewSet
-
 
 admin.site.site_header = 'Foodgram'
 admin.site.site_title = 'Foodgram'

@@ -13,11 +13,11 @@ from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 from .filters import RecipeFilter
 from .models import (
     Ingredient,
-    Tag,
-    Recipe,
     Favorite,
-    ShoppingCart,
+    Recipe,
     RecipeIngredient,
+    ShoppingCart,
+    Tag,
 )
 from .serializers import (
     IngredientSerializer,
