@@ -39,7 +39,7 @@ jobs:
         with:
           context: ./backend/
           push: true
-          tags: ${{ secrets.USERNAME }}/kittygram_backend:latest
+          tags: ${{ secrets.USERNAME }}/foodgram_backend:latest
 
   build_frontend_and_push_to_docker_hub:
     name: Push Frontend Docker Image to Docker Hub
@@ -59,4 +59,4 @@ jobs:
         with:
           context: ./frontend/
           push: true
-          tags: ${{ secrets.USERNAME }}/kittygram_backend:latest
+          tags: ${{ secrets.USERNAME }}/foodgram_backend:latest
