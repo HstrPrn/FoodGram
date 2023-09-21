@@ -175,12 +175,12 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         """
         try:
             return RecipeIngredient.objects.bulk_create(
-                    [RecipeIngredient(
-                        recipe=recipe,
-                        ingredient=ingredient.get('id'),
-                        ingredient_quantity=ingredient.get(
-                            'ingredient_quantity'
-                        )) for ingredient in ingredients]
+                [RecipeIngredient(
+                    recipe=recipe,
+                    ingredient=ingredient.get('id'),
+                    ingredient_quantity=ingredient.get(
+                        'ingredient_quantity'
+                    )) for ingredient in ingredients]
             )
         except IntegrityError:
             raise ValidationError({
