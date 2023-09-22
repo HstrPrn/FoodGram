@@ -142,10 +142,14 @@ class RecipeCreateSerializer(RecipeReadSerializer):
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(
+        recipe, created = Recipe.objects.get_or_create(
             **validated_data,
             author=self._get_user()
         )
+        if not created:
+            raise ValidationError({
+                'error': 'Вы уже создавали такой рецепт'
+            })
         recipe.ingredient.set(
             self._create_recipe_ingredients_relations(recipe, ingredients)
         )
@@ -220,15 +224,15 @@ class FavoriteSerializer(serializers.ModelSerializer):
     def create(self, validated_data, message=None):
         if message is None:
             message = 'Рецепт уже добавлен в избранное.'
-        try:
-            return self.Meta.model.objects.create(
-                recipe=validated_data.get('id'),
-                user=self.context.get('request').user
-            )
-        except IntegrityError:
+        obj, created = self.Meta.model.objects.get_or_create(
+            recipe=validated_data.get('id'),
+            user=self.context.get('request').user
+        )
+        if not created:
             raise ValidationError({
                 'error': message
             })
+        return obj
 
 
 class ShoppingCartSerializer(FavoriteSerializer):

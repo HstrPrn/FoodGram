@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
+from django.db.models.constraints import UniqueConstraint
 
 
 HEX_COLOR_REGEX = r'^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$'
@@ -57,6 +58,16 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ('name',)
+        constraints = (
+            UniqueConstraint(
+                fields=(
+                    'author',
+                    'name',
+                    'image',
+                ),
+                name='recipe_unique_constraint'
+            ),
+        )
 
     def __str__(self) -> str:
         return self.name

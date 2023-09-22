@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError
 from djoser.serializers import (
     UserSerializer as BaseUserSerializer,
     UserCreateSerializer as BaseCreateSerializer,
@@ -112,12 +111,12 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         message = 'Вы уже подписались на этого пользователя.'
-        try:
-            return self.Meta.model.objects.create(
-                author=validated_data.get('id'),
-                user=self.context.get('request').user
-            )
-        except IntegrityError:
+        obj, created = self.Meta.model.objects.create(
+            author=validated_data.get('id'),
+            user=self.context.get('request').user
+        )
+        if not created:
             raise ValidationError({
                 'error': message
             })
+        return obj
