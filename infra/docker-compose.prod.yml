@@ -11,7 +11,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
   backend:
-    image: hstrprn/foodgram-backend:latest
+    image: hstrprn/foodgram_backend:latest
     env_file:
       - ../.env
     volumes:
@@ -20,7 +20,7 @@ services:
     depends_on:
       - db
   frontend:
-    image: hstrprn/foodgram-frontend:latest
+    image: hstrprn/foodgram_frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
   gateway:
