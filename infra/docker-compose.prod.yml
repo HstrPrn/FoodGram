@@ -20,7 +20,7 @@ services:
     depends_on:
       - db
   frontend:
-    image: hstrprn/foodgram-frontend
+    image: hstrprn/foodgram-frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
   gateway:
