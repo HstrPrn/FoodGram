@@ -6,11 +6,11 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandParser
 from django.db import IntegrityError
 
-from recipes.models import Ingredient
+from recipes.models import Tag
 
 
 class Command(BaseCommand):
-    help = 'Populate ingridient table in data base with csv file'
+    help = 'Populate tags table in data base with csv file'
 
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument('-f', '--filename', type=str)
@@ -23,15 +23,15 @@ class Command(BaseCommand):
         )
 
         with open(path_to_file) as f:
-            rows = csv.DictReader(f, fieldnames=['name', 'measurement_unit'])
+            rows = csv.DictReader(f, fieldnames=['name', 'color', 'slug'])
             for row in rows:
                 try:
-                    Ingredient.objects.get_or_create(**row)
+                    Tag.objects.get_or_create(**row)
                 except IntegrityError:
                     self.stdout.write(self.style.NOTICE(
-                        'Ingredient already added'
+                        'Tag already added'
                     ))
                     continue
         self.stdout.write(
-            self.style.SUCCESS('Successfully created ingridients')
+            self.style.SUCCESS('Successfully created tags')
         )

@@ -15,7 +15,7 @@ jobs:
     - run: |
         echo The PR was merged
 
-  test:
+  tests:
     name: Check PEP8
     needs: if_merged
     runs-on: ubuntu-latest
@@ -33,4 +33,23 @@ jobs:
           pip install -r backend/requirements.txt
       - name: Test with flake8
         run: python -m flake8 /backend
+
+  deploy:
+    name: Deploy Project on Server
+    needs:
+      -tests
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Copy docker-compose.prod.yml via ssh
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.username }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.` PASSPHRASE}}
+          source: "docker-compose.production.yml"
+          target: "foodgram"
+
+      
 
