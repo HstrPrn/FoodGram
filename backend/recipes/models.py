@@ -40,7 +40,8 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         max_length=200,
-        verbose_name='Название'
+        verbose_name='Название',
+        unique=True
     )
     image = models.ImageField(
         upload_to='recipe/images/',
@@ -58,16 +59,6 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ('name',)
-        constraints = (
-            UniqueConstraint(
-                fields=(
-                    'author',
-                    'name',
-                    'image',
-                ),
-                name='recipe_unique_constraint'
-            ),
-        )
 
     def __str__(self) -> str:
         return self.name
