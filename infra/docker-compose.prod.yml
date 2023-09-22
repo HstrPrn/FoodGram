@@ -28,6 +28,8 @@ services:
     ports:
       - "8080:80"
     volumes:
+      - ../docs/:/usr/share/nginx/html/api/docs/
+      - ../frontend/build:/usr/share/nginx/html/
       - static:/var/www/backend/static/
       - media:/mediafiles/
     depends_on:
