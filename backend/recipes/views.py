@@ -89,7 +89,6 @@ class RecipeViewSet(ModelViewSet):
         favorite.is_valid(raise_exception=True)
         favorite.save()
         recipe = get_object_or_404(Recipe, pk=pk)
-
         return Response(
             RecipeShortSerializer(recipe).data,
             status=status.HTTP_200_OK

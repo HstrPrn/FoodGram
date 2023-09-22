@@ -7,9 +7,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from utils.paginators import CustomPaginator
 from .models import Follow
 from .serializers import FollowSerializer, FollowingUserSerializer
+from utils.paginators import CustomPaginator
 
 
 User = get_user_model()
