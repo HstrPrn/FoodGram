@@ -139,8 +139,11 @@ REST_FRAMEWORK = {
     'SEARCH_PARAM': 'name'
 }
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost',
-]
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split()
+# [
+#     'http://localhost',
+# ]
 
-INTERNAL_IPS = ['127.0.0.1', 'localhost']
+INTERNAL_IPS = os.getenv('ALLOWED_HOSTS', '').split()
+
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS').split()
