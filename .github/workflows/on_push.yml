@@ -63,7 +63,7 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
   
   build_gateway_and_push_to_docker_hub:
-    name: Push Frontend Docker Image to Docker Hub
+    name: Push Gateway Docker Image to Docker Hub
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -78,7 +78,8 @@ jobs:
       - name: Push to DockerHub
         uses: docker/build-push-action@v4
         with:
-          context: ./infra/
+          context: .
+          file: ./infra/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_gateway:latest
 
