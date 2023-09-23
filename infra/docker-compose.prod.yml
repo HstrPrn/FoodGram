@@ -24,11 +24,10 @@ services:
     volumes:
       - ../frontend/:/app/result_build/
   gateway:
-    image: nginx:1.19.3
+    image: hstrprn/foodgram_gateway:latest
     ports:
       - "8080:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static:/var/www/backend/static/
