@@ -63,8 +63,10 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
 
   build_gateway_and_push_to_docker_hub:
-    name: Push Frontend Docker Image to Docker Hub
+    name: Push Gateway Docker Image to Docker Hub
     runs-on: ubuntu-latest
+    needs:
+      - build_frontend_and_push_to_docker_hub
     steps:
       - name: Check out code
         uses: actions/checkout@v3
