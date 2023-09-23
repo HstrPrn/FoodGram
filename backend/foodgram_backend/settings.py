@@ -140,9 +140,6 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split()
-# [
-#     'http://localhost',
-# ]
 
 INTERNAL_IPS = os.getenv('ALLOWED_HOSTS', '').split()
 
