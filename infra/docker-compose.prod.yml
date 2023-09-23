@@ -21,14 +21,15 @@ services:
       - db
   frontend:
     image: hstrprn/foodgram_frontend:latest
+    command: cp -r /app/build/. /static/
     volumes:
-      - ../frontend/:/app/result_build/
+      - static:/frontend_static/
   gateway:
-    image: nginx:1.19.3
+    image: hstrprn/foodgram_gateway
     ports:
       - "8080:80"
     volumes:
-      - static:/var/www/backend/static/
+      - static:/var/www/static/
       - media:/mediafiles/
     depends_on:
       - backend
