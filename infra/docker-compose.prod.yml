@@ -15,21 +15,19 @@ services:
     env_file:
       - ../.env
     volumes:
-      - static:/app/static/
+      - static:/app/collected_static/
       - media:/app/media/
     depends_on:
       - db
   frontend:
     image: hstrprn/foodgram_frontend:latest
     volumes:
-      - ../frontend/:/app/result_build/
+      - static:/app/result_build/build
   gateway:
     image: hstrprn/foodgram_gateway:latest
     ports:
       - "8080:80"
     volumes:
-      - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/api/docs/
-      - static:/staticfiles/static/
+      - static:/staticfiles/
       - media:/mediafiles/
 
