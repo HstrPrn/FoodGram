@@ -22,14 +22,14 @@ services:
   frontend:
     image: hstrprn/foodgram_frontend:latest
     volumes:
-      - static:/app/result_build/
+      - ../frontend/:/app/result_build/
   gateway:
     image: hstrprn/foodgram_gateway:latest
     ports:
       - "8080:80"
     volumes:
-      - static:/var/www/backend/static/
+      - ../frontend/build:/usr/share/nginx/html/
+      - ../docs/:/usr/share/nginx/html/api/docs/
+      - static:/staticfiles/static/
       - media:/mediafiles/
-    depends_on:
-      - backend
-      - frontend
+
