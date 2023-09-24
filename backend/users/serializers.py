@@ -111,7 +111,7 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         message = 'Вы уже подписались на этого пользователя.'
-        obj, created = self.Meta.model.objects.create(
+        obj, created = self.Meta.model.objects.get_or_create(
             author=validated_data.get('id'),
             user=self.context.get('request').user
         )

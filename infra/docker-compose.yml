@@ -11,9 +11,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
   backend:
-    build:
-      context: ../
-      dockerfile: ./backend/Dockerfile
+    image: hstrprn/foodgram_backend:latest
     env_file:
       - ../.env
     volumes:
@@ -22,15 +20,11 @@ services:
     depends_on:
       - db
   frontend:
-    build:
-      context: ../
-      dockerfile: ./frontend/Dockerfile
+    image: hstrprn/foodgram_frontend:latest
     volumes:
       - static:/app/result_build/build
   gateway:
-    build:
-      context: ../
-      dockerfile: ./nginx/Dockerfile
+    image: hstrprn/foodgram_gateway
     ports:
       - "80:80"
     volumes:
