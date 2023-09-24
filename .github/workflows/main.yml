@@ -12,8 +12,8 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-    - run: |
-        echo The PR was merged
+      - run: |
+          echo The PR was merged
 
   tests:
     name: Check PEP8
