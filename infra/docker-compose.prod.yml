@@ -24,9 +24,9 @@ services:
     volumes:
       - static:/app/result_build/build
   gateway:
-    image: hstrprn/foodgram_gateway
+    image: hstrprn/foodgram_gateway:latest
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - static:/staticfiles/
       - media:/mediafiles/
