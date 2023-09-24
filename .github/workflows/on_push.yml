@@ -82,37 +82,3 @@ jobs:
           file: ./nginx/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_gateway:latest
-
-
-  deploy:
-    name: Deploy Project on Server
-    runs-on: ubuntu-latest
-    needs:
-      - tests
-      - build_frontend_and_push_to_docker_hub
-      - build_backend_and_push_to_docker_hub
-      - build_gateway_and_push_to_docker_hub
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-      - name: Copy docker-compose.prod.yml via ssh
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: "infra/docker-compose.prod.yml"
-          target: "foodgram"
-      - name: Executing remote ssh commands to deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          script: |
-            cd foodgram/infra
-            sudo docker compose -f docker-compose.prod.yml pull
-            sudo docker compose -f docker-compose.prod.yml down
-            sudo docker compose -f docker-compose.prod.yml up -d
