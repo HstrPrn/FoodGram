@@ -4,7 +4,6 @@ from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -82,32 +81,27 @@ class RecipeViewSet(ModelViewSet):
 
     def _post_action_view(self, request, pk=None, serializer=None):
         """Обработчик post запросов."""
-        favorite = serializer(
+        serializer_obj = serializer(
             data={'id': pk},
             context={'request': request}
         )
-        favorite.is_valid(raise_exception=True)
-        favorite.save()
+        serializer_obj.is_valid(raise_exception=True)
+        serializer_obj.save()
         recipe = get_object_or_404(Recipe, pk=pk)
         return Response(
             RecipeShortSerializer(recipe).data,
-            status=status.HTTP_200_OK
+            status=status.HTTP_201_OK
         )
 
-    def _delete_action_view(self, request, pk=None, model=None, message=None):
+    def _delete_action_view(
+            self, request, pk=None, serializer=None, model=None):
         """Обработчик delete запросов."""
-        recipe = get_object_or_404(Recipe, pk=pk)
-        if not model.objects.filter(
-            user=request.user,
-            recipe=recipe
-        ).exists():
-            raise ValidationError({
-                'error': message
-            })
-        model.objects.filter(
-            user=request.user,
-            recipe=recipe
-        ).delete()
+        serializer_obj = serializer(
+            data={'id': pk},
+            context={'request': request}
+        )
+        serializer_obj.is_valid(raise_exception=True)
+        self.perform_destroy(model.objects.filter(**serializer_obj.data))
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -118,10 +112,10 @@ class RecipeViewSet(ModelViewSet):
     )
     def favorite(self, request, pk=None):
         if request.method == 'POST':
-            message = 'Рецепт уже добавлен в избранное'
             return self._post_action_view(request, pk, FavoriteSerializer)
-        message = 'Рецепт не найден в избранном.'
-        return self._delete_action_view(request, pk, Favorite, message)
+        return self._delete_action_view(
+            request, pk, FavoriteSerializer, Favorite
+        )
 
     @action(
         methods=('post', 'delete'),
@@ -131,10 +125,8 @@ class RecipeViewSet(ModelViewSet):
     def shopping_cart(self, request, pk=None):
         if request.method == 'POST':
             return self._post_action_view(request, pk, ShoppingCartSerializer)
-
-        message = 'Рецепт не найден в списке покупок.'
         return self._delete_action_view(
-            request, pk, ShoppingCart, message
+            request, pk, ShoppingCartSerializer, ShoppingCart
         )
 
     @action(
