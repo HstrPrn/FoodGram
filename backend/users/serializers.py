@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from djoser.serializers import (
     UserSerializer as BaseUserSerializer,
     UserCreateSerializer as BaseCreateSerializer,
@@ -33,18 +34,21 @@ class UserReadSerializer(BaseUserSerializer):
     """Сериализатор модели пользователя для чтения."""
     is_subscribed = serializers.SerializerMethodField(read_only=True)
 
-    class Meta(BaseUserSerializer.Meta):
-        fields = ('is_subscribed',) + BaseUserSerializer.Meta.fields
-
     def _get_user(self):
         """Получение юзера."""
         return self.context.get('request').user
 
     def get_is_subscribed(self, obj):
         user = self._get_user()
-        if not user.is_authenticated or user == obj:
+        if any((
+            not user.is_authenticated,
+            user == obj
+        )):
             return False
-        return user.follower.filter(author=obj).exists()
+        return obj.following.filter(user=user).exists()
+
+    class Meta(BaseUserSerializer.Meta):
+        fields = ('is_subscribed',) + BaseUserSerializer.Meta.fields
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -66,12 +70,6 @@ class FollowingUserSerializer(UserReadSerializer):
     """
     recipes = serializers.SerializerMethodField(read_only=True)
     recipes_count = serializers.SerializerMethodField(read_only=True)
-
-    class Meta(UserReadSerializer.Meta):
-        fields = (
-            ('recipes', 'recipes_count') + UserReadSerializer.Meta.fields
-        )
-        read_only_fields = fields
 
     def _get_recipes_limit(self):
         """Получение колличества выводимых рецептов из query_params."""
@@ -97,6 +95,12 @@ class FollowingUserSerializer(UserReadSerializer):
             author=obj
         )
 
+    class Meta(UserReadSerializer.Meta):
+        fields = (
+            ('recipes', 'recipes_count') + UserReadSerializer.Meta.fields
+        )
+        read_only_fields = fields
+
 
 class FollowSerializer(serializers.ModelSerializer):
     """Сериализатор модели Follow"""
@@ -105,18 +109,40 @@ class FollowSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
-    class Meta:
-        model = Follow
-        fields = ('id',)
+    def _get_user(self):
+        return self.context.get('request').user
 
+    def _is_exist(self, attrs):
+        return self.Meta.model.objects.filter(
+            author=attrs.get('id'),
+            user=self._get_user()
+        ).exists()
+
+    def validate(self, attrs):
+        if all((
+            self._is_exist(attrs),
+            self.context.get('request').method == 'POST'
+        )):
+            raise ValidationError({
+                'error': 'Вы уже подписались на этого пользователя.'
+            })
+        elif all((
+            not self._is_exist(attrs),
+            self.context.get('request').method == 'DELETE'
+        )):
+            raise ValidationError({
+                'error': 'Пользователь уже удален из избранного.'
+            })
+        return super().validate(attrs)
+
+    @transaction.atomic
     def create(self, validated_data):
-        message = 'Вы уже подписались на этого пользователя.'
-        obj, created = self.Meta.model.objects.get_or_create(
+        obj = self.Meta.model.objects.get_or_create(
             author=validated_data.get('id'),
             user=self.context.get('request').user
         )
-        if not created:
-            raise ValidationError({
-                'error': message
-            })
         return obj
+
+    class Meta:
+        model = Follow
+        fields = ('id',)

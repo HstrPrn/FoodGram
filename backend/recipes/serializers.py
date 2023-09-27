@@ -1,7 +1,7 @@
 import base64
 
 from django.core.files.base import ContentFile
-from django.db import IntegrityError
+from django.db import transaction
 from django.db.models import F
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
@@ -65,35 +65,24 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
     image = Base64ImageField()
 
-    class Meta:
-        model = Recipe
-        fields = (
-            'id',
-            'tags',
-            'author',
-            'ingredients',
-            'is_favorited',
-            'is_in_shopping_cart',
-            'name',
-            'image',
-            'text',
-            'cooking_time'
-        )
-
     def _get_user(self):
         return self.context.get('request').user
 
     def get_is_favorited(self, obj):
         user = self._get_user()
-        if (user.is_authenticated
-           and user.favorites.filter(recipe=obj).exists()):
+        if all((
+            user.is_authenticated,
+            obj.in_favorites.filter(user=user).exists()
+        )):
             return True
         return False
 
     def get_is_in_shopping_cart(self, obj):
         user = self._get_user()
-        if (user.is_authenticated
-           and user.cart.filter(recipe=obj).exists()):
+        if all((
+            user.is_authenticated,
+            obj.in_cart.filter(user=user).exists()
+        )):
             return True
         return False
 
@@ -108,6 +97,21 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'name',
             'measurement_unit',
             amount=F('recipe__ingredient_quantity')
+        )
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'tags',
+            'author',
+            'ingredients',
+            'is_favorited',
+            'is_in_shopping_cart',
+            'name',
+            'image',
+            'text',
+            'cooking_time'
         )
 
 
@@ -139,23 +143,31 @@ class RecipeCreateSerializer(RecipeReadSerializer):
     )
     ingredients = RecipeIngredientsSerializer(many=True, required=True)
 
+    def validate_ingredients(self, values):
+        for ing in values:
+            if RecipeIngredient.objects.filter(
+                ingredient=ing.get('id')
+            ).exists():
+                raise ValidationError(
+                    'Ингредиент уже добавле в рецепт'
+                )
+        return values
+
+    @transaction.atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        recipe, created = Recipe.objects.get_or_create(
+        recipe = self.Meta.model.objects.create(
             **validated_data,
             author=self._get_user()
         )
-        if not created:
-            raise ValidationError({
-                'error': 'Вы уже создавали такой рецепт'
-            })
         recipe.ingredient.set(
             self._create_recipe_ingredients_relations(recipe, ingredients)
         )
         recipe.tags.set(tags)
         return recipe
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
@@ -177,19 +189,19 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         """
         Создание списка объектов в промежуточной таблице RecipeIngredient.
         """
-        try:
-            return RecipeIngredient.objects.bulk_create(
-                [RecipeIngredient(
-                    recipe=recipe,
-                    ingredient=ingredient.get('id'),
-                    ingredient_quantity=ingredient.get(
-                        'ingredient_quantity'
-                    )) for ingredient in ingredients]
-            )
-        except IntegrityError:
-            raise ValidationError({
-                'error': 'Ингредиент уже добавле в рецепт'
-            })
+        valid_data = []
+        for ingredient in ingredients:
+            if ingredient not in valid_data:
+                valid_data.append(ingredient)
+        return RecipeIngredient.objects.bulk_create(
+            [RecipeIngredient(
+                recipe=recipe,
+                ingredient=ingredient.get('id'),
+                ingredient_quantity=ingredient.get(
+                    'ingredient_quantity'
+                )) for ingredient in valid_data],
+
+        )
 
     def to_representation(self, instance):
         return RecipeReadSerializer(
@@ -199,6 +211,7 @@ class RecipeCreateSerializer(RecipeReadSerializer):
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
+    """Упрощенный сериализатор модели Recipe только для чтения"""
     class Meta:
         model = Recipe
         fields = (
@@ -217,29 +230,57 @@ class FavoriteSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
+    def _is_exist(self, attrs):
+        return self.Meta.model.objects.filter(
+            recipe=attrs.get('id').id,
+            user=self._get_user()
+        ).exists()
+
+    def _get_user(self):
+        return self.context.get('request').user
+
+    def validate(self, attrs, exist_message=None, not_exist_messsage=None):
+        if not all((
+            exist_message,
+            not_exist_messsage
+        )):
+            exist_message = 'Рецепт уже добавлен в избранное.'
+            not_exist_message = 'Рецепт не найден в избранном.'
+        if all((
+            self._is_exist(attrs),
+            self.context.get('request').method == 'POST'
+        )):
+            raise ValidationError({
+                'error': exist_message
+            })
+        if all((
+            not self._is_exist(attrs),
+            self.context.get('request').method == 'DELETE'
+        )):
+            raise ValidationError({
+                'error': not_exist_message
+            })
+        return super().validate(attrs)
+
+    @transaction.atomic
+    def create(self, validated_data):
+        obj = self.Meta.model.objects.create(
+            recipe=validated_data.get('id'),
+            user=self._get_user()
+        )
+        return obj
+
     class Meta:
         model = Favorite
         fields = ('id',)
 
-    def create(self, validated_data, message=None):
-        if message is None:
-            message = 'Рецепт уже добавлен в избранное.'
-        obj, created = self.Meta.model.objects.get_or_create(
-            recipe=validated_data.get('id'),
-            user=self.context.get('request').user
-        )
-        if not created:
-            raise ValidationError({
-                'error': message
-            })
-        return obj
-
 
 class ShoppingCartSerializer(FavoriteSerializer):
     """Сериализатор корзины поккупок"""
+    def validate(self, attrs):
+        exist_message = 'Рецепт уже добавлен в список покупок.'
+        not_exist_message = 'Рецепт не найден в списке покупок.'
+        return super().validate(attrs, exist_message, not_exist_message)
+
     class Meta(FavoriteSerializer.Meta):
         model = ShoppingCart
-
-    def create(self, validated_data):
-        message = 'Рецепт уже добавлен в список покупок.'
-        return super().create(validated_data, message)

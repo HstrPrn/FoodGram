@@ -3,7 +3,6 @@ from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as BaseUserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -26,13 +25,17 @@ class UserViewSet(BaseUserViewSet):
     )
     def subscribe(self, request, id=None):
         author = get_object_or_404(User, id=id)
+        serializer = FollowSerializer(
+            data={'id': author.id},
+            context={'request': request}
+        )
         if request.method == 'POST':
-            follow = FollowSerializer(
+            serializer = FollowSerializer(
                 data={'id': author.id},
                 context={'request': request}
             )
-            follow.is_valid(raise_exception=True)
-            follow.save()
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
             return Response(
                 FollowingUserSerializer(
                     author,
@@ -40,13 +43,7 @@ class UserViewSet(BaseUserViewSet):
                 ).data,
                 status=status.HTTP_201_CREATED)
 
-        if not Follow.objects.filter(
-            user=request.user,
-            author=author
-        ).exists():
-            raise ValidationError({
-                'error': 'Пользователь уже удален из избранного'
-            })
+        serializer.is_valid(raise_exception=True)
         Follow.objects.filter(
             user=request.user,
             author=author
