@@ -5,10 +5,10 @@ from .models import Recipe
 
 class RecipeFilter(FilterSet):
     tags = filters.CharFilter(field_name='tags__slug')
-    is_favorited = filters.NumberFilter(
+    is_favorited = filters.BooleanFilter(
         method='is_favorited_filter',
     )
-    is_in_shopping_cart = filters.NumberFilter(
+    is_in_shopping_cart = filters.BooleanFilter(
         method='is_in_shopping_cart_filter',
     )
 
