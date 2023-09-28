@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
 from django.db import models
 
 from utils.regex import HEX_COLOR_REGEX
 
-
+MIN_VALUE: int = 1
 User = get_user_model()
 
 
@@ -49,6 +49,7 @@ class Recipe(models.Model):
         verbose_name='Описание'
     )
     cooking_time = models.PositiveSmallIntegerField(
+        validators=(MinValueValidator(MIN_VALUE),),
         verbose_name='Время готовки'
     )
     pub_date = models.DateTimeField(
@@ -137,6 +138,7 @@ class RecipeIngredient(models.Model):
         verbose_name='Ингредиент'
     )
     ingredient_quantity = models.PositiveSmallIntegerField(
+        validators=(MinValueValidator(MIN_VALUE),),
         verbose_name='Колличество ингредиента'
     )
 
