@@ -5,4 +5,5 @@ COPY ./backend/requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 COPY ./backend .
 COPY ./data/ ../data
+COPY ./docs ../docs/
 ENTRYPOINT ["sh", "/app/entrypoint.sh" ]
