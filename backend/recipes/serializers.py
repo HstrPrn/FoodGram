@@ -256,7 +256,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
             raise ValidationError({
                 'error': not_exist_message
             })
-        return super().validate(attrs)
 
     @transaction.atomic
     def create(self, validated_data):
