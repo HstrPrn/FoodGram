@@ -4,7 +4,9 @@ from django.db import models
 
 from utils.regex import HEX_COLOR_REGEX, TAG_NAME_REGEX
 
+
 MIN_VALUE: int = 1
+
 User = get_user_model()
 
 
