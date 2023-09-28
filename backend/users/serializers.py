@@ -40,12 +40,10 @@ class UserReadSerializer(BaseUserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self._get_user()
-        if any((
+        return any((
             not user.is_authenticated,
             user == obj
-        )):
-            return False
-        return obj.following.filter(user=user).exists()
+        )) or obj.following.filter(user=user).exists()
 
     class Meta(BaseUserSerializer.Meta):
         fields = ('is_subscribed',) + BaseUserSerializer.Meta.fields

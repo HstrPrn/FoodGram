@@ -2,8 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 
-
-USERNAME_REGEX = r'^[\w.@+-]+\Z'
+from utils.regex import USERNAME_REGEX
 
 
 class User(AbstractUser):

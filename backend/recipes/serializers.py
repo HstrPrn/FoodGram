@@ -70,21 +70,17 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         user = self._get_user()
-        if all((
+        return all((
             user.is_authenticated,
             obj.in_favorites.filter(user=user).exists()
-        )):
-            return True
-        return False
+        ))
 
     def get_is_in_shopping_cart(self, obj):
         user = self._get_user()
-        if all((
+        return all((
             user.is_authenticated,
             obj.in_cart.filter(user=user).exists()
-        )):
-            return True
-        return False
+        ))
 
     def get_ingredients(self, obj):
         """
