@@ -16,7 +16,7 @@ services:
       - ../.env
     volumes:
       - static:/app/collected_static/
-      - docs:/docs/
+      - static:/docs/
       - media:/app/media/
     depends_on:
       - db
