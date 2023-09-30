@@ -1,7 +1,7 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import IsAuthenticated
 
 
-class IsAuthor(BasePermission):
+class IsAuthor(IsAuthenticated):
     """Разрешение для автора рецепта."""
 
     def has_object_permission(self, request, view, obj):

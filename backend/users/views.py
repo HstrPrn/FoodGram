@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from djoser.permissions import CurrentUserOrAdmin
 from djoser.views import UserViewSet as BaseUserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
@@ -17,6 +18,11 @@ User = get_user_model()
 class UserViewSet(BaseUserViewSet):
     """Вьюсет пользователей и подписок"""
     pagination_class = CustomPaginator
+
+    def get_permissions(self):
+        if self.action == 'me':
+            self.permission_classes = (CurrentUserOrAdmin,)
+        return super().get_permissions()
 
     @action(
         methods=('post', 'delete'),
