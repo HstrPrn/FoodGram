@@ -27,9 +27,9 @@ from .serializers import (
     FavoriteSerializer,
     ShoppingCartSerializer
 )
-from .permissions import IsAuthor
-from .utils import download_csv
+from utils.permissions import IsAuthor
 from utils.paginators import CustomPaginator
+from utils.services import download_csv
 
 
 User = get_user_model()
@@ -90,7 +90,7 @@ class RecipeViewSet(ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
         return Response(
             RecipeShortSerializer(recipe).data,
-            status=status.HTTP_201_OK
+            status=status.HTTP_201_CREATED
         )
 
     def _delete_action_view(

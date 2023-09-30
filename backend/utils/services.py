@@ -13,7 +13,7 @@ def download_csv(data: List[dict]) -> HttpResponse:
     """
     if not data:
         raise ValidationError({
-            'error': 'Список покупок пуст'
+            'error': 'Список покупок пуст.'
         })
     response: HttpResponse = HttpResponse(content_type='text/csv')
     response.write(u'\ufeff'.encode('utf8'))

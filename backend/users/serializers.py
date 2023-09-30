@@ -34,6 +34,13 @@ class UserReadSerializer(BaseUserSerializer):
     """Сериализатор модели пользователя для чтения."""
     is_subscribed = serializers.SerializerMethodField(read_only=True)
 
+    def validate(self, attrs):
+        if not self._get_user().is_authenticated:
+            raise ValidationError({
+                'error': 'Пользователь не зарегистрирован'
+            })
+        return super().validate(attrs)
+
     def _get_user(self):
         """Получение юзера."""
         return self.context.get('request').user
@@ -41,10 +48,9 @@ class UserReadSerializer(BaseUserSerializer):
     def get_is_subscribed(self, obj):
         user = self._get_user()
         return (
-            user.is_authenticated
-            and user == obj
-            and obj.following.filter(user=user).exists()
-        )
+            not user.is_authenticated
+            or user == obj
+        ) or obj.following.filter(user=user).exists()
 
     class Meta(BaseUserSerializer.Meta):
         fields = ('is_subscribed',) + BaseUserSerializer.Meta.fields
@@ -120,7 +126,7 @@ class FollowSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if self._get_user() == attrs.get('id'):
             raise ValidationError({
-                'error': 'Вы уже подписались на этого пользователя.'
+                'error': 'Нельзя подписаться на самого себя'
             })
         if all((
             self._is_exist(attrs),
