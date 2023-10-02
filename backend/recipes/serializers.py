@@ -15,6 +15,7 @@ from .models import (
     ShoppingCart
 )
 from users.serializers import UserReadSerializer
+from utils.services import check_unique
 
 
 class Base64ImageField(serializers.ImageField):
@@ -139,15 +140,16 @@ class RecipeCreateSerializer(RecipeReadSerializer):
     )
     ingredients = RecipeIngredientsSerializer(many=True, required=True)
 
-    def validate_ingredients(self, values):
-        for ing in values:
-            if RecipeIngredient.objects.filter(
-                ingredient=ing.get('id')
-            ).exists():
-                raise ValidationError(
-                    'Ингредиент уже добавле в рецепт'
-                )
-        return values
+    def validate(self, attrs):
+        if not attrs.get('tags'):
+            raise ValidationError({
+                'error': 'Добавьте тег.'
+            })
+        if not attrs.get('ingredients'):
+            raise ValidationError({
+                'error': 'Добавьте ингредиенты.'
+            })
+        return attrs
 
     @transaction.atomic
     def create(self, validated_data):
@@ -177,7 +179,7 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         instance.ingredient.set(
             self._create_recipe_ingredients_relations(instance, ingredients)
         )
-        instance.tags.set(tags)
+        instance.tags.set(check_unique(tags))
         instance.save()
         return instance
 
@@ -185,10 +187,8 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         """
         Создание списка объектов в промежуточной таблице RecipeIngredient.
         """
-        valid_data = []
-        for ingredient in ingredients:
-            if ingredient not in valid_data:
-                valid_data.append(ingredient)
+
+        valid_data = check_unique(ingredients)
         return RecipeIngredient.objects.bulk_create(
             [RecipeIngredient(
                 recipe=recipe,
@@ -235,10 +235,10 @@ class FavoriteSerializer(serializers.ModelSerializer):
     def _get_user(self):
         return self.context.get('request').user
 
-    def validate(self, attrs, exist_message=None, not_exist_messsage=None):
-        if not all((
-            exist_message,
-            not_exist_messsage
+    def validate(self, attrs, exist_message=None, not_exist_message=None):
+        if all((
+            not exist_message,
+            not not_exist_message
         )):
             exist_message = 'Рецепт уже добавлен в избранное.'
             not_exist_message = 'Рецепт не найден в избранном.'

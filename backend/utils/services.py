@@ -25,3 +25,15 @@ def download_csv(data: List[dict]) -> HttpResponse:
         'attachment; filename="shopping_list.csv"'
     )
     return response
+
+
+def check_unique(iter: List) -> List:
+    """Проверка входящих данных на уникальность."""
+    unique_data: List = []
+    for item in iter:
+        if item in unique_data:
+            raise ValidationError({
+                'error': 'Данные должны быть уникальными'
+            })
+        unique_data.append(item)
+    return unique_data
