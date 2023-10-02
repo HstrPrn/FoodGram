@@ -22,11 +22,11 @@ class RecipeFilter(FilterSet):
         )
 
     def is_favorited_filter(self, qs, name, value):
-        if value:
+        if value and self.request.user.is_authenticated:
             return qs.filter(in_favorites__user=self.request.user)
         return qs
 
     def is_in_shopping_cart_filter(self, qs, name, value):
-        if value:
+        if value and self.request.user.is_authenticated:
             return qs.filter(in_cart__user=self.request.user)
         return qs

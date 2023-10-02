@@ -75,7 +75,7 @@ class RecipeViewSet(ModelViewSet):
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
             self.permission_classes = (AllowAny,)
-        elif self.action == 'partial_update':
+        else:
             self.permission_classes = (IsAuthor,)
         return super().get_permissions()
 
@@ -101,13 +101,15 @@ class RecipeViewSet(ModelViewSet):
             context={'request': request}
         )
         serializer_obj.is_valid(raise_exception=True)
-        self.perform_destroy(model.objects.filter(**serializer_obj.data))
+        self.perform_destroy(
+            model.objects.filter(recipe=pk, user=request.user)
+        )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         methods=('post', 'delete'),
-        permission_classes=(IsAuthenticated,),
+        permission_classes=(IsAuthor,),
         detail=True,
     )
     def favorite(self, request, pk=None):
@@ -119,7 +121,7 @@ class RecipeViewSet(ModelViewSet):
 
     @action(
         methods=('post', 'delete'),
-        permission_classes=(IsAuthenticated,),
+        permission_classes=(IsAuthor,),
         detail=True,
     )
     def shopping_cart(self, request, pk=None):
