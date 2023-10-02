@@ -162,7 +162,7 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         recipe.ingredient.set(
             self._create_recipe_ingredients_relations(recipe, ingredients)
         )
-        recipe.tags.set(tags)
+        recipe.tags.set(check_unique(tags))
         return recipe
 
     @transaction.atomic
