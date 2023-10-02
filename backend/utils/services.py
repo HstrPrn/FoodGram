@@ -28,6 +28,7 @@ def download_csv(data: List[dict]) -> HttpResponse:
 
 
 def check_unique(iter: List) -> List:
+    """Проверка входящих данных на уникальность."""
     unique_data: List = []
     for item in iter:
         if item in unique_data:
