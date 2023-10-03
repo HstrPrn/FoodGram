@@ -67,6 +67,11 @@ class RecipeViewSet(ModelViewSet):
         'delete',
     )
 
+    def get_queryset(self):
+        if self.action == 'favorite':
+            return self.filter_queryset(self.get_queryset())
+        return super().get_queryset()
+
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return RecipeReadSerializer
